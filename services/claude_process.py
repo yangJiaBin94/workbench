@@ -25,7 +25,6 @@ class ClaudeProcess(QObject):
 
         env = QProcessEnvironment.systemEnvironment()
         env.insert("PYTHONIOENCODING", "utf-8")
-        env.insert("LANG", "zh_CN.UTF-8")
         self._proc.setProcessEnvironment(env)
 
         self._proc.readyReadStandardOutput.connect(self._on_stdout)

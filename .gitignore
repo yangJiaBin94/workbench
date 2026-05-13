@@ -22,6 +22,7 @@ env/
 Thumbs.db
 
 # Project data (user-specific)
+data/
 *.db
 *.db-shm
 *.db-wal

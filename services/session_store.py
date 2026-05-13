@@ -16,7 +16,7 @@ class SessionStore:
     @property
     def conn(self) -> sqlite3.Connection:
         if self._conn is None:
-            self._conn = sqlite3.connect(str(self.db_path), autocommit=True)
+            self._conn = sqlite3.connect(str(self.db_path), isolation_level=None)
             self._conn.execute("PRAGMA journal_mode=WAL")
             self._conn.execute("PRAGMA foreign_keys=ON")
             self._conn.row_factory = sqlite3.Row
