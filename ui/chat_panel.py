@@ -170,7 +170,7 @@ class ChatPanel(QScrollArea):
         self._track_bubble(bubble)
         row.addWidget(bubble)
         self._inner.addLayout(row)
-        self._scroll_bottom()
+        self._scroll_bottom(force=True)
 
     def show_typing(self):
         self._remove_typing()
@@ -235,7 +235,7 @@ class ChatPanel(QScrollArea):
         row.addWidget(prompt)
         row.addStretch()
         self._inner.addLayout(row)
-        self._scroll_bottom()
+        self._scroll_bottom(force=True)
         return prompt
 
     def add_assistant_bubble(self, text: str):
@@ -266,9 +266,11 @@ class ChatPanel(QScrollArea):
                     self.add_thinking(msg.content)
                 elif msg.content.strip():
                     self.add_assistant_bubble(msg.content)
-        self._scroll_bottom()
+        self._scroll_bottom(force=True)
 
-    def _scroll_bottom(self):
-        QTimer.singleShot(0, lambda: self.verticalScrollBar().setValue(
-            self.verticalScrollBar().maximum()
-        ))
+    def _scroll_bottom(self, force: bool = False):
+        def _do_scroll():
+            bar = self.verticalScrollBar()
+            if force or bar.value() >= bar.maximum() - 80:
+                bar.setValue(bar.maximum())
+        QTimer.singleShot(0, _do_scroll)

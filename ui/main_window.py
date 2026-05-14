@@ -93,12 +93,11 @@ class MainWindow(QMainWindow):
             self._states[sid] = _StreamState()
         return self._states[sid]
 
-    def _get_or_start_process(self, session_id: int, working_dir: str) -> ClaudeProcess:
+    def _get_or_start_process(self, session_id: int, working_dir: str) -> tuple[ClaudeProcess, bool]:
         if session_id in self._processes:
             proc = self._processes[session_id]
             if proc.is_running():
-                return proc
-            # Process died, remove and recreate
+                return proc, False
             proc.deleteLater()
             del self._processes[session_id]
 
@@ -109,7 +108,7 @@ class MainWindow(QMainWindow):
         proc.process_finished.connect(self._on_claude_finished)
         proc.start(working_dir=working_dir)
         self._processes[session_id] = proc
-        return proc
+        return proc, True
 
     def _stop_session_process(self, session_id: int):
         proc = self._processes.pop(session_id, None)
@@ -235,12 +234,31 @@ class MainWindow(QMainWindow):
         state.streaming_msg_id = None
         state.streaming_text = ""
 
-        proc = self._get_or_start_process(sid, self._active_session.working_dir)
+        proc, is_new = self._get_or_start_process(sid, self._active_session.working_dir)
 
         msg = Message(session_id=sid, role="user", content=text, event_type="text")
         self.store.save_message(msg)
         self.chat.add_user_bubble(text)
-        proc.send_message(text)
+        self.chat.show_typing()
+
+        send_text = text
+        if is_new:
+            recent = self.store.get_recent_messages(sid, limit=6)
+            if recent:
+                send_text = self._build_priming_context(recent) + text
+
+        proc.send_message(send_text)
+
+    def _build_priming_context(self, messages: list[Message]) -> str:
+        parts = ["以下是本会话最近的对话记录，请了解上下文：\n"]
+        for m in messages:
+            role = "用户" if m.role == "user" else "助手"
+            content = m.content
+            if m.event_type in ("thinking", "tool_call"):
+                continue
+            parts.append(f"{role}: {content}\n")
+        parts.append("\n（以上为历史上下文，以下为用户最新消息）\n\n")
+        return "".join(parts)
 
     # ---- claude output (routed by session_id) ----
 

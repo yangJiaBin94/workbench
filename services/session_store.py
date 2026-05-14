@@ -127,6 +127,14 @@ class SessionStore:
         ).fetchall()
         return [Message(**dict(r)) for r in rows]
 
+    def get_recent_messages(self, session_id: int, limit: int = 6) -> list[Message]:
+        rows = self.conn.execute(
+            "SELECT * FROM messages WHERE session_id=? AND role IN ('user','assistant') ORDER BY id DESC LIMIT ?",
+            (session_id, limit),
+        ).fetchall()
+        rows.reverse()
+        return [Message(**dict(r)) for r in rows]
+
     def get_last_message(self, session_id: int, role: str) -> Optional[Message]:
         row = self.conn.execute(
             "SELECT * FROM messages WHERE session_id=? AND role=? ORDER BY id DESC LIMIT 1",
