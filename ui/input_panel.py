@@ -163,12 +163,10 @@ class InputPanel(QFrame):
         self._on_drag_leave(None)
         files = [url.toLocalFile() for url in event.mimeData().urls()]
         if files:
-            names = ", ".join(f.split("/")[-1] for f in files[:5])
-            if len(files) > 5:
-                names += f" +{len(files) - 5}"
+            paths = "\n".join(files)
             cur = self._input.toPlainText()
             if cur:
-                self._input.setPlainText(cur + "\n" + names)
+                self._input.setPlainText(cur + "\n" + paths)
             else:
-                self._input.setPlainText(names)
+                self._input.setPlainText(paths)
             self.files_dropped.emit(files)
