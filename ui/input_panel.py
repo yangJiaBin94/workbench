@@ -107,6 +107,7 @@ class InputPanel(QFrame):
                 else:
                     self._on_send()
                     return True
+            return False
         return super().eventFilter(obj, event)
 
     def _on_text_changed(self):

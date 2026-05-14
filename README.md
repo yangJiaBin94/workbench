@@ -12,16 +12,97 @@
 
 ### 环境要求
 
-- Python 3.10+
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) CLI
+- **Python** 3.10+
+- **Node.js** 18+（Claude Code CLI 运行所需）
+- **Claude Code CLI**（需预先安装并确保 `claude` 命令可在终端中直接调用）
 
-### 安装依赖
+---
+
+### 1. 安装 Python
+
+**Windows**
+
+从 [python.org](https://www.python.org/downloads/) 下载安装包，安装时**勾选 "Add Python to PATH"**。
+
+安装完成后验证：
+
+```powershell
+python --version
+```
+
+**macOS**
 
 ```bash
+# 通过 Homebrew 安装
+brew install python@3.12
+```
+
+**Linux (Ubuntu/Debian)**
+
+```bash
+sudo apt update
+sudo apt install python3 python3-pip python3-venv
+```
+
+---
+
+### 2. 安装 Node.js
+
+Claude Code CLI 基于 Node.js 运行，需先安装 Node.js 18+。
+
+**Windows**
+
+从 [nodejs.org](https://nodejs.org/) 下载 LTS 版本安装包（安装时勾选 "Automatically install the necessary tools"）。
+
+安装完成后验证：
+
+```powershell
+node --version
+npm --version
+```
+
+**macOS**
+
+```bash
+brew install node
+```
+
+**Linux (Ubuntu/Debian)**
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+---
+
+### 3. 安装 Claude Code CLI
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+安装完成后验证：
+
+```bash
+claude --version
+```
+
+首次使用需完成登录认证，按照终端提示操作即可。
+
+---
+
+### 4. 克隆项目并安装 Python 依赖
+
+```bash
+git clone <项目地址> workbench
+cd workbench
 pip install PyQt6>=6.5
 ```
 
-### 启动
+---
+
+### 5. 启动
 
 ```bash
 python main.py
