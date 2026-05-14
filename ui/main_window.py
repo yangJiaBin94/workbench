@@ -351,6 +351,21 @@ class MainWindow(QMainWindow):
             elif inner_type in ("message_delta", "message_stop"):
                 self._finalize_text_state(sid)
 
+        elif etype == "control_request":
+            request_id = data.get("request_id", "")
+            request = data.get("request", {})
+            subtype = request.get("subtype", "")
+            tool_name = request.get("tool_name", "")
+            tool_input = request.get("input", {})
+
+            if is_active and subtype == "can_use_tool":
+                prompt = self.chat.add_permission_prompt(request_id, tool_name, tool_input)
+                proc = self._processes.get(sid)
+                if proc:
+                    prompt.confirmed.connect(
+                        lambda rid, behavior, p=proc: p.send_control_response(rid, behavior)
+                    )
+
         elif etype == "result":
             self._finalize_text_state(sid)
 

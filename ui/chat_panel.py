@@ -5,7 +5,7 @@ from PyQt6.QtCore import Qt, QTimer
 from ui.theme import (
     BASE, OVERLAY0, SUBTEXT0, SURFACE0, SURFACE1, GREEN, TEAL, BLUE, FONT_SANS,
 )
-from ui.message_widgets import UserBubble, AssistantBubble, ToolCallCard, ThinkingBlock
+from ui.message_widgets import UserBubble, AssistantBubble, ToolCallCard, ThinkingBlock, PermissionPrompt
 from models.session import Message
 
 
@@ -226,6 +226,17 @@ class ChatPanel(QScrollArea):
         bubble = self._bubble_map.pop(msg_id, None)
         if bubble:
             bubble.set_text(text)
+
+    def add_permission_prompt(self, request_id: str, tool_name: str, tool_input: dict | None = None) -> PermissionPrompt:
+        self._remove_typing()
+        row = QHBoxLayout()
+        prompt = PermissionPrompt(request_id, tool_name, tool_input)
+        self._track_bubble(prompt)
+        row.addWidget(prompt)
+        row.addStretch()
+        self._inner.addLayout(row)
+        self._scroll_bottom()
+        return prompt
 
     def add_assistant_bubble(self, text: str):
         self._remove_typing()

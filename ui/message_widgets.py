@@ -1,5 +1,5 @@
 import re
-from PyQt6.QtWidgets import QFrame, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QTextEdit
+from PyQt6.QtWidgets import QFrame, QLabel, QVBoxLayout, QHBoxLayout, QSizePolicy, QTextEdit, QPushButton
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFont, QFontMetrics
 from ui.theme import (
@@ -272,6 +272,124 @@ class ToolCallCard(QFrame):
             body.addWidget(desc)
 
         layout.addLayout(body, 1)
+
+
+class PermissionPrompt(QFrame):
+    confirmed = pyqtSignal(str, str)  # request_id, behavior ("allow" | "deny")
+
+    def __init__(self, request_id: str, tool_name: str, tool_input: dict | None = None, parent=None):
+        super().__init__(parent)
+        self._request_id = request_id
+        self._resolved = False
+
+        self.setStyleSheet(f"""
+            PermissionPrompt {{
+                background: {MANTLE};
+                border: 1px solid {SURFACE1};
+                border-left: 3px solid {PEACH};
+                border-radius: 8px;
+                padding: 12px 16px;
+            }}
+        """)
+
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(10)
+
+        header_row = QHBoxLayout()
+        header_row.setSpacing(8)
+
+        icon = QLabel("◆")
+        icon.setStyleSheet(f"font-size: 14px; color: {PEACH}; background: transparent;")
+        header_row.addWidget(icon, 0, Qt.AlignmentFlag.AlignTop)
+
+        header_text = QVBoxLayout()
+        header_text.setSpacing(2)
+
+        name_zh = TOOL_NAMES_ZH.get(tool_name, tool_name)
+        title = QLabel(f"需要确认 — {name_zh}")
+        title.setStyleSheet(f"font-size: 13px; font-weight: 700; color: {PEACH}; background: transparent;")
+        header_text.addWidget(title)
+
+        subtitle = QLabel(tool_name)
+        subtitle.setStyleSheet(f"font-size: 10px; color: {OVERLAY0}; background: transparent;")
+        header_text.addWidget(subtitle)
+
+        header_row.addLayout(header_text)
+        header_row.addStretch()
+        layout.addLayout(header_row)
+
+        # Show target detail
+        target = _extract_target(tool_name, tool_input)
+        if target:
+            detail = QLabel(target)
+            detail.setWordWrap(True)
+            detail.setFont(_mono_font(11))
+            detail.setStyleSheet(f"""
+                font-size: 11px;
+                color: {GREEN};
+                background: {CRUST};
+                padding: 6px 10px;
+                border-radius: 4px;
+            """)
+            layout.addWidget(detail)
+
+        btn_row = QHBoxLayout()
+        btn_row.setSpacing(10)
+        btn_row.addStretch()
+
+        deny_btn = QPushButton("拒绝")
+        deny_btn.setFixedSize(72, 34)
+        deny_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        deny_btn.setStyleSheet(_perm_btn_style(RED, RED))
+        deny_btn.clicked.connect(lambda: self._resolve("deny"))
+        btn_row.addWidget(deny_btn)
+
+        allow_btn = QPushButton("允许")
+        allow_btn.setFixedSize(72, 34)
+        allow_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        allow_btn.setStyleSheet(_perm_btn_style(GREEN, GREEN_DARK))
+        allow_btn.clicked.connect(lambda: self._resolve("allow"))
+        btn_row.addWidget(allow_btn)
+
+        layout.addLayout(btn_row)
+
+    def _resolve(self, behavior: str):
+        if self._resolved:
+            return
+        self._resolved = True
+        self.confirmed.emit(self._request_id, behavior)
+        self.setEnabled(False)
+        label = "已允许" if behavior == "allow" else "已拒绝"
+        color = GREEN if behavior == "allow" else RED
+        self.setStyleSheet(f"""
+            PermissionPrompt {{
+                background: {MANTLE};
+                border: 1px solid {SURFACE0};
+                border-left: 3px solid {color};
+                border-radius: 8px;
+                padding: 12px 16px;
+                opacity: 0.6;
+            }}
+        """)
+
+
+def _perm_btn_style(color: str, hover_color: str) -> str:
+    return f"""
+        QPushButton {{
+            background: transparent;
+            color: {color};
+            border: 1px solid {color};
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }}
+        QPushButton:hover {{
+            background: {hover_color};
+            color: {CRUST};
+            border-color: {hover_color};
+        }}
+    """
 
 
 class ThinkingBlock(QFrame):

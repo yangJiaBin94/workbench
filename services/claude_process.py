@@ -39,9 +39,26 @@ class ClaudeProcess(QObject):
             "--input-format", "stream-json",
             "--include-partial-messages",
             "--permission-mode", "acceptEdits",
+            "--permission-prompt-tool", "stdio",
             "--append-system-prompt", "请始终使用简体中文进行思考、对话和工具描述。代码和命令保持原样。",
         ]
         self._proc.start("claude", args)
+
+    def send_control_response(self, request_id: str, behavior: str = "allow"):
+        if self._proc is None or self._proc.state() != QProcess.ProcessState.Running:
+            return
+        payload = json.dumps({
+            "type": "control_response",
+            "response": {
+                "subtype": "success",
+                "request_id": request_id,
+                "response": {
+                    "behavior": behavior,
+                    "updatedInput": {},
+                },
+            },
+        })
+        self._proc.write((payload + "\n").encode("utf-8"))
 
     def send_message(self, text: str):
         if self._proc is None or self._proc.state() != QProcess.ProcessState.Running:
